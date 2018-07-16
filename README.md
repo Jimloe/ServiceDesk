@@ -2,6 +2,22 @@
 Compilation of PowerShell functions within a GUI to make my job easier.
 
 # ChangeLog
+# v2.6 - 20180716
+#-Added Brussels to the supported schools.
+#-Tweaked the way the elevated.txt file is used/deleted to make it more seamless.
+#-Tweaked SchoolMatcher to have it be same format in each new/old/prompt matcher.
+#
+# v2.5 - 20180713
+#-Made some minor changes to the script layout for easier editing
+#-Disabled some of the unfinished script function - DriveMappings, ComputerCleanup, BackupUserFiles
+#-Modified the location of the ServiceDeskLogFile so it'll create the file under the root of the logged in user to prevent permission issues.
+#-Modified the name of the file used to elevate the script to prevent confusion with the actual logging file.  New name is ElevateScript.txt, which is still located in the root of the current logged in user directory.
+#-MigrateComputers - added the ability to exit out prematurely
+#-SchoolMatcher - Added in a listing of the different drive mappings for the Schools.  Going to incorperate this into the DriveMappings function.
+#-Logger - Added the ability to add a newline
+#-DriveMappings - Finished the functionality for different sites to map their own drives.  Not all schools are complete. Need additional information.
+#-Re-added logging to the main form.
+#
 # v2.5 - 20180713
 #-Made some minor changes to the script layout for easier editing
 #-Disabled some of the unfinished script function - DriveMappings, ComputerCleanup, BackupUserFiles
