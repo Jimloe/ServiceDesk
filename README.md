@@ -2,6 +2,10 @@
 Compilation of PowerShell functions within a GUI to make my job easier.
 
 # ChangeLog
+# v2.7.1 - 20180717
+#-ComputerCleanup - Now works for the DS domain.  Matches any computers listed in the SchoolMatcher function and moves it to the proper OU.
+#-Added the ability for the Logger function to automatically scroll as text is being displayed in the output box.
+#-Added KTown, Landstuhl, Vogelweh and Ramstein schools to the supported list
 # v2.7 - 20180717
 #-MigrateComputers - Fix an error with the looping of the pingable computers resulting in a bad computername being passed to the next computer in the loop.
 #
