@@ -1,6 +1,9 @@
 ﻿#Created and maintained by Jim Lower - james.lower.ctr@dodea.edu
 #
 #region ChangeLog
+# v2.7 - 20180717
+#-MigrateComputers - Fix an error with the looping of the pingable computers resulting in a bad computername being passed to the next computer in the loop.
+#
 # v2.6 - 20180716
 #-Added Brussels to the supported schools.
 #-Tweaked the way the elevated.txt file is used/deleted to make it more seamless.
@@ -447,11 +450,11 @@ function MigrateComputers{
     }
     #Checking pingable status
     #####################################################################
-    Foreach($targetcomp in $PingableItems){
-        $status = Test-Connection -ComputerName $targetcomp -Count 1 -ErrorAction Continue
+    Foreach($pingablecomputer in $PingableItems){
+        $status = Test-Connection -ComputerName $pingablecomputer -Count 1 -ErrorAction Continue
         if($Status.ResponseTime -ne $null){
-            Logger -FilePath $LogFileLoc -Text "Was able to ping $targetcomp, running SchoolMatch function" -OPWindow
-            $SchoolMatcher = SchoolMatcher -CompName $targetcomputer
+            Logger -FilePath $LogFileLoc -Text "Was able to ping $pingablecomputer, running SchoolMatch function" -OPWindow
+            $SchoolMatcher = SchoolMatcher -CompName $pingablecomputer
             #Doing work on computers here
             #####################################################################
             if($RenameComputers.IsPresent)
@@ -474,39 +477,34 @@ function MigrateComputers{
                 }
                 $reboot = "/reboot:1"
                 $forceit = "/Force"
-                $batgenerator = $command + ' ' + $renamecomp + ' ' + $targetcomp + ' ' + $compname + ' ' + $user + ' ' + $pw + ' ' + $reboot + ' ' + $forceit
+                $batgenerator = $command + ' ' + $renamecomp + ' ' + $pingablecomputer + ' ' + $compname + ' ' + $user + ' ' + $pw + ' ' + $reboot + ' ' + $forceit
                 $batgenerator | Out-File -FilePath C:\Users\$CurrentUserName\RenameRemoteComputers.bat -Append -Encoding ascii
                 Logger -FilePath $LogFileLoc -Text "Created Batch File with command"
-                Logger -FilePath $LogFileLoc -Text "$targetcomp is going to be renamed to $newname" -OPWindow
+                Logger -FilePath $LogFileLoc -Text "$pingablecomputer is going to be renamed to $newname" -OPWindow
             }
             if($ChangeDomain.IsPresent)
             {
                 $domain  = 'ds.dodea.edu'
                 $EUCreds = $PWIN
-                Logger -FilePath $LogFileLoc -Text "Attempting to join $targetcomp to the DS Domain" -OPWindow
-                $outputBox.AppendText("Attempting to join $targetcomp to the DS Domain using the new name of $($SchoolMatcher.newname)")
-                try{Add-Computer -ComputerName $targetcomp -DomainName $domain -OUPath "$($SchoolMatcher.OU)" -Credential $DSCreds -NewName "$($SchoolMatcher.newname)" -UnjoinDomainCredential $EUCreds -Restart}
+                Logger -FilePath $LogFileLoc -Text "Attempting to join $pingablecomputer to the DS Domain" -OPWindow
+                $outputBox.AppendText("Attempting to join $pingablecomputer to the DS Domain using the new name of $($SchoolMatcher.newname)")
+                try{Add-Computer -ComputerName $pingablecomputer -DomainName $domain -OUPath "$($SchoolMatcher.OU)" -Credential $DSCreds -NewName "$($SchoolMatcher.newname)" -UnjoinDomainCredential $EUCreds -Restart}
                 catch{Logger -FilePath $LogFileLoc -Text "Failed with Error Message: $($Error[0])" -OPWindow -NewLine}
-                try{
-                    Remove-ADComputer -Identity $targetcomp -Credential $EUCreds
-                    Logger -FilePath $LogFileLoc -Text "Removal succeeded" -OPWindow
-                }catch{Logger -FilePath $LogFileLoc -Text "Removal failed with error message: $($Error[0])" -OPWindow -NewLine}
-                
             }
             if($FixWireless.IsPresent)
             {
                 try
                 {
-                    Logger -FilePath $LogFileLoc -Text "Attempting to enable WinRM on $targetcomp" -OPWindow
-                    Enable-WinRM -ComputerName $targetcomp
+                    Logger -FilePath $LogFileLoc -Text "Attempting to enable WinRM on $pingablecomputer" -OPWindow
+                    Enable-WinRM -ComputerName $pingablecomputer
                 }
-                catch{Logger -FilePath $LogFileLoc -Text "Failed Settings WinRM on $targetcomp with error message $($error[0])" -OPWindow -NewLine}
+                catch{Logger -FilePath $LogFileLoc -Text "Failed Settings WinRM on $pingablecomputer with error message $($error[0])" -OPWindow -NewLine}
                 try{
                     Logger -FilePath $LogFileLoc -Text "Successfully set WinRM Settings" -OPWindow
                     if($Matches.Values -eq "EU"){$wificreds = $PWIN}
                     if($Matches.Values -eq "DS"){$wificreds = $DSCreds}
-                    Logger -FilePath $LogFileLoc -Text "Attempting to set wireless profile on $targetcomp" -OPWindow
-                    $WifiResult = Invoke-Command -ComputerName $targetcomp -Credential $wificreds {
+                    Logger -FilePath $LogFileLoc -Text "Attempting to set wireless profile on $pingablecomputer" -OPWindow
+                    $WifiResult = Invoke-Command -ComputerName $pingablecomputer -Credential $wificreds {
                         $WifiXML = @'
 <?xml version="1.0"?>
 <WLANProfile xmlns="http://www.microsoft.com/networking/WLAN/profile/v1">
@@ -544,11 +542,11 @@ function MigrateComputers{
                     }
                     Logger -FilePath $LogFileLoc -Text "$WifiResult" -OPWindow
                 }
-                Catch{Logger -FilePath $LogFileLoc -Text "Unable to set wifi profile on $targetcomp with error message $($Error[0])" -OPWindow -NewLine}
+                Catch{Logger -FilePath $LogFileLoc -Text "Unable to set wifi profile on $pingablecomputer with error message $($Error[0])" -OPWindow -NewLine}
             }          
         }
         else{
-            Logger -FilePath $LogFileLoc -Text "$targetcomp was not pingable, skipping it" -OPWindow
+            Logger -FilePath $LogFileLoc -Text "$pingablecomputer was not pingable, skipping it" -OPWindow
         }
     }
     #Run the batch file
@@ -1267,7 +1265,7 @@ namespace System
     $menuFixWireless  = New-Object System.Windows.Forms.ToolStripMenuItem
     $menuGenCSV       = New-Object System.Windows.Forms.ToolStripMenuItem
 
-    $Form.Text = "DoDEA Service Desk Tool v2.6"
+    $Form.Text = "DoDEA Service Desk Tool v2.7"
     $Form.BackColor = "#d1d1d1"
     $Form.StartPosition   = "CenterScreen"
     $Form.add_FormClosing({
