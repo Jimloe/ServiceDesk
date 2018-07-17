@@ -2,6 +2,9 @@
 Compilation of PowerShell functions within a GUI to make my job easier.
 
 # ChangeLog
+# v2.7 - 20180717
+#-MigrateComputers - Fix an error with the looping of the pingable computers resulting in a bad computername being passed to the next computer in the loop.
+#
 # v2.6 - 20180716
 #-Added Brussels to the supported schools.
 #-Tweaked the way the elevated.txt file is used/deleted to make it more seamless.
